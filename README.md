@@ -8,7 +8,7 @@
 
 
 
-**ValScrim.Tools** is a scrims tool for map selection and team generation, designed for VALORANT custom games and tournaments. 
+**ValScrim.Tools** is a scrims tool for map selection and team generation, designed for Valorant custom games and tournaments. 
 
 ## Features
 
@@ -19,56 +19,14 @@
     -   **Instant Draw**: Quickly assign players to teams.
     -   **Wheel Spin**: Animate the process with a spinning wheel for added suspense.
 -   **Coin Toss**: Built-in coin flip for side selection (Attacker/Defender).
--   **Modern UI**: Sleek, Valorant-inspired aesthetics with dark mode support.
 
 ## Tech Stack
 
-Built with modern web technologies:
 -   [React](https://react.dev/)
 -   [Vite](https://vitejs.dev/)
 -   [Tailwind CSS](https://tailwindcss.com/)
 -   [shadcn/ui](https://ui.shadcn.com/)
 -   [Lucide React](https://lucide.dev/) (Icons)
-
-## Getting Started
-
-### Prerequisites
-
--   Node.js (v18 or higher)
--   npm
-
-### Installation
-
-1.  Clone the repository:
-    ```bash
-    git clone https://github.com/serhat27s/valscrim-tools.git
-    cd valscrim-tools
-    ```
-
-2.  Install dependencies:
-    ```bash
-    npm install
-    ```
-
-3.  Start the development server:
-    ```bash
-    npm run dev
-    ```
-
-4.  Open http://localhost:8080 to view the app.
-
-## Easy self-hosting
-
-For a hassle-free experience, **just double-click `start-local.bat`** to launch the development server.
-> Alternatively, in your IDE **right-click `start-local.bat`** and select **"Open in integrated terminal"**.
-
-
-**How `start-local.bat` works:**
-- The batch file automatically runs `npm run dev` in the correct directory
-- No need to open terminals or use command-line tools
-- Works regardless of where you clone the repository
-- The dev server will start in a Command Prompt window
-
 
 ## License
 
