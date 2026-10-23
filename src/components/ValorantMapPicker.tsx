@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { valorantMaps, ValorantMap } from '@/data/valorantMaps';
 import { MapCard } from './MapCard';
 import { MapCountSelector } from './MapCountSelector';
@@ -11,21 +11,11 @@ import { Shuffle, RotateCcw, Map, Users, Zap, Github, Pause, Play } from 'lucide
 import { useToast } from '@/hooks/use-toast';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import confetti from 'canvas-confetti';
+import { triggerConfetti } from '@/lib/confetti';
 
 export const ValorantMapPicker = () => {
   const [excludedMapsArray, setExcludedMapsArray] = useLocalStorage<string[]>('valorant-excluded-maps', []);
-  const [excludedMaps, setExcludedMapsState] = useState<Set<string>>(() => new Set(excludedMapsArray));
-
-  // Only sync to localStorage when excludedMaps changes, not the other way around
-  const setExcludedMaps = useCallback((updater: Set<string> | ((prev: Set<string>) => Set<string>)) => {
-    setExcludedMapsState(prev => {
-      const newSet = updater instanceof Function ? updater(prev) : updater;
-      // Sync to localStorage
-      setExcludedMapsArray(Array.from(newSet));
-      return newSet;
-    });
-  }, [setExcludedMapsArray]);
+  const excludedMaps = useMemo(() => new Set(excludedMapsArray), [excludedMapsArray]);
 
   const [selectedCount, setSelectedCount] = useLocalStorage<1 | 3 | 5>('valorant-map-count', 3);
   const [selectedMaps, setSelectedMaps] = useState<ValorantMap[]>([]);
@@ -42,31 +32,21 @@ export const ValorantMapPicker = () => {
   const toggleExclude = useCallback((mapId: string) => {
     if (isAnimating) return;
 
-    setExcludedMaps(prev => {
-      const next = new Set(prev);
-
-      if (next.has(mapId)) {
-        // Always allow un-excluding a map
-        next.delete(mapId);
-      } else {
-        // Check if we can exclude this map
-        const availableMapsAfterExclusion = valorantMaps.length - (next.size + 1);
-
-        if (availableMapsAfterExclusion < selectedCount) {
-          toast({
-            title: "Cannot exclude map",
-            description: `You need at least ${selectedCount} maps for ${selectedCount === 1 ? 'BO1' : selectedCount === 3 ? 'BO3' : 'BO5'}. Currently ${availableMapsAfterExclusion} would remain.`,
-            variant: "destructive"
-          });
-          return prev; // Don't change the state
-        }
-
-        next.add(mapId);
+    if (excludedMaps.has(mapId)) {
+      setExcludedMapsArray(prev => prev.filter(id => id !== mapId));
+    } else {
+      const availableMapsAfterExclusion = valorantMaps.length - (excludedMaps.size + 1);
+      if (availableMapsAfterExclusion < selectedCount) {
+        toast({
+          title: "Cannot exclude map",
+          description: `You need at least ${selectedCount} maps for ${selectedCount === 1 ? 'BO1' : selectedCount === 3 ? 'BO3' : 'BO5'}. Currently ${availableMapsAfterExclusion} would remain.`,
+          variant: "destructive"
+        });
+        return;
       }
-
-      return next;
-    });
-  }, [isAnimating, selectedCount, toast]);
+      setExcludedMapsArray(prev => [...prev, mapId]);
+    }
+  }, [isAnimating, excludedMaps, selectedCount, toast, setExcludedMapsArray]);
 
   const availableMaps = valorantMaps.filter(map => !excludedMaps.has(map.id));
 
@@ -133,42 +113,6 @@ export const ValorantMapPicker = () => {
     }
     const targetMaps = shuffled.slice(0, selectedCount);
 
-    const triggerConfetti = () => {
-      const duration = 2000;
-      const end = Date.now() + duration;
-
-      const frame = () => {
-        confetti({
-          particleCount: 3,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0, y: 0.7 },
-          colors: ['#ff4655', '#ffffff', '#0f1923']
-        });
-        confetti({
-          particleCount: 3,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1, y: 0.7 },
-          colors: ['#ff4655', '#ffffff', '#0f1923']
-        });
-
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
-        }
-      };
-
-      // Initial burst
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#ff4655', '#ffffff', '#0f1923', '#ff6b7a']
-      });
-
-      frame();
-    };
-
     if (instant) {
       setSelectedMaps(targetMaps);
       setRevealedMaps(targetMaps);
@@ -217,8 +161,8 @@ export const ValorantMapPicker = () => {
     if (isAnimating) return;
     setSelectedMaps([]);
     setRevealedMaps([]);
-    setExcludedMaps(new Set());
-  }, [isAnimating]);
+    setExcludedMapsArray([]);
+  }, [isAnimating, setExcludedMapsArray]);
 
   const togglePause = useCallback(() => {
     setIsPaused(prev => {
@@ -241,7 +185,7 @@ export const ValorantMapPicker = () => {
           {/* GitHub Link - Top Right */}
           <div className="absolute top-4 right-4">
             <a
-              href="https://github.com/serhat27s/valscrims.tool"
+              href="https://github.com/sersah/valscrims.tool"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 px-3 py-2 bg-card/80 border border-border rounded-lg hover:bg-card hover:border-primary/50 transition-all group"
@@ -303,7 +247,7 @@ export const ValorantMapPicker = () => {
           </TabsList>
 
           {/* Map Picker Tab */}
-          <TabsContent value="maps" className="space-y-8">
+          <TabsContent value="maps" forceMount className="data-[state=inactive]:hidden space-y-8">
             {/* Controls Card */}
             <div className="bg-card border border-border rounded-lg p-6 space-y-6">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -469,7 +413,7 @@ export const ValorantMapPicker = () => {
           </TabsContent>
 
           {/* Team Draw Tab */}
-          <TabsContent value="teams">
+          <TabsContent value="teams" forceMount className="data-[state=inactive]:hidden">
             <div className="bg-card border border-border rounded-lg p-6 max-w-2xl mx-auto">
               <TeamDrawer />
             </div>
@@ -485,12 +429,12 @@ export const ValorantMapPicker = () => {
           </p>
           <p className="text-muted-foreground text-sm">
             <a
-              href="https://github.com/serhat27s"
+              href="https://github.com/sersah"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline font-medium"
             >
-              @serhat27s
+              @sersah
             </a>
           </p>
         </div>

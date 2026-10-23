@@ -10,10 +10,6 @@ export const SelectedMapsDisplay = ({ maps }: SelectedMapsDisplayProps) => {
 
   return (
     <div className="space-y-6">
-      <h2 className="valorant-title text-3xl text-center text-primary tracking-widest">
-        Selected Maps
-      </h2>
-      
       <div className={cn(
         "grid gap-6",
         maps.length === 1 && "grid-cols-1 max-w-md mx-auto",

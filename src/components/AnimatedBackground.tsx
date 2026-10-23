@@ -1,3 +1,11 @@
+const PARTICLES = Array.from({ length: 15 }, (_, i) => ({
+    id: i,
+    left: `${(i * 6.7 + 3.3) % 100}%`,
+    top: `${(i * 13.7 + 7.1) % 100}%`,
+    delay: `${(i * 0.4) % 5}s`,
+    duration: `${6 + (i * 0.7) % 8}s`
+}));
+
 export const AnimatedBackground = () => {
     return (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -17,15 +25,15 @@ export const AnimatedBackground = () => {
 
             {/* Floating particles */}
             <div className="absolute inset-0">
-                {[...Array(15)].map((_, i) => (
+                {PARTICLES.map((p) => (
                     <div
-                        key={i}
+                        key={p.id}
                         className="absolute w-1 h-1 bg-primary/30 rounded-full animate-float"
                         style={{
-                            left: `${Math.random() * 100}%`,
-                            top: `${Math.random() * 100}%`,
-                            animationDelay: `${Math.random() * 5}s`,
-                            animationDuration: `${5 + Math.random() * 10}s`
+                            left: p.left,
+                            top: p.top,
+                            animationDelay: p.delay,
+                            animationDuration: p.duration
                         }}
                     />
                 ))}
